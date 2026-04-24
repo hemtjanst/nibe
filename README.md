@@ -11,7 +11,7 @@ You need to provide the certificate fingerprint and device serial number to be a
 * Username: from menu 7.5.15.
 * Password: from menu 7.5.15.
 * Fingerprint: from menu 7.5.15.
-* Serial number: from menu 1.1.1.
+* Serial number: from menu 3.5.
 * Endpoint: `https://IP-or-hostname:8443`.
 
 ## API documentation
