@@ -11,8 +11,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -227,8 +229,35 @@ func safeHTTPClient(
 	serial, fingerprint string,
 ) *http.Client {
 	return &http.Client{
+		Timeout: 10 * time.Minute,
 		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			Protocols: func() *http.Protocols {
+				protos := &http.Protocols{}
+				protos.SetHTTP1(true)
+				return protos
+			}(),
+			MaxConnsPerHost:       5,
+			MaxIdleConnsPerHost:   2,
+			IdleConnTimeout:       30 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 5 * time.Second,
+			ReadBufferSize:        4 << 10,
+			WriteBufferSize:       4 << 10,
+			DialContext: (&net.Dialer{
+				Timeout:       10 * time.Second,
+				KeepAlive:     15 * time.Second,
+				FallbackDelay: -1,
+				Resolver: &net.Resolver{
+					Dial: (&net.Dialer{
+						Timeout:       50 * time.Millisecond,
+						KeepAlive:     15 * time.Second,
+						FallbackDelay: 30 * time.Millisecond,
+					}).DialContext,
+				},
+			}).DialContext,
 			TLSClientConfig: &tls.Config{
+				NextProtos:            []string{"http/1.1"},
 				InsecureSkipVerify:    true,
 				VerifyPeerCertificate: VerifyCert(serial, fingerprint),
 			},
