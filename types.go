@@ -133,7 +133,7 @@ type MetadataType string
 
 const (
 	MetadataTypeInvalid MetadataType = ""
-	MetadataTypeMetdata MetadataType = "  metadata"
+	MetadataTypeMetdata MetadataType = "metadata"
 )
 
 type ValueType string
