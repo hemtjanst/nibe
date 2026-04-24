@@ -96,7 +96,7 @@ type VariableType string
 const (
 	VariableTypeInvalid VariableType = ""
 	VariableTypeBinary  VariableType = "binary"
-	VariableTypeData    VariableType = "data"
+	VariableTypeDate    VariableType = "date"
 	VariableTypeFloat   VariableType = "floating-point"
 	VariableTypeInteger VariableType = "integer"
 	VariableTypeString  VariableType = "string"
