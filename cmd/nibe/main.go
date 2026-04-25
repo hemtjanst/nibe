@@ -26,8 +26,10 @@ func main() {
 		*passwd = os.Getenv("NIBE_PASSWORD")
 	}
 
+	errOut := flag.CommandLine.Output()
+
 	if *user == "" || *passwd == "" || *fingerprint == "" || *serial == "" || *endpoint == "" {
-		fmt.Println("all flags must be provided")
+		fmt.Fprintln(errOut, "all flags must be provided")
 		os.Exit(1)
 	}
 
@@ -51,60 +53,60 @@ func main() {
 	case "devices":
 		devs, err := client.Devices(ctx)
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 
 		if err := output(os.Stdout, devs, *format); err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 	case "device":
 		if len(args) != 2 {
-			fmt.Fprintf(os.Stderr, "device needs an ID")
+			fmt.Fprintln(errOut, "device needs an ID")
 			os.Exit(1)
 		}
 
 		dev, err := client.Device(ctx, args[1])
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 
 		if err := output(os.Stdout, dev, *format); err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 	case "points":
 		if len(args) != 2 {
-			fmt.Fprintf(os.Stderr, "points needs a device ID")
+			fmt.Fprintln(errOut, "points needs a device ID")
 			os.Exit(1)
 		}
 
 		points, err := client.Points(ctx, args[1])
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 
 		if err := output(os.Stdout, points, *format); err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 	case "point":
 		if len(args) != 3 {
-			fmt.Fprintf(os.Stderr, "point needs a device ID and a variable ID")
+			fmt.Fprintln(errOut, "point needs a device ID and a variable ID")
 			os.Exit(1)
 		}
 
 		point, err := client.Point(ctx, args[1], args[2])
 		if err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 
 		if err := output(os.Stdout, point, *format); err != nil {
-			fmt.Fprint(os.Stderr, err)
+			fmt.Fprintln(errOut, err)
 			os.Exit(1)
 		}
 	}
