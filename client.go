@@ -1,6 +1,7 @@
 package nibe
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -57,7 +58,7 @@ func (c *Client) Device(ctx context.Context, id string) (Device, error) {
 	defer resp.Body.Close()
 
 	var res Device
-	if err := decode(resp.Body, &res); err != nil {
+	if err := decode(resp.Body, &res, resp.StatusCode); err != nil {
 		return res, err
 	}
 
@@ -81,7 +82,7 @@ func (c *Client) Devices(ctx context.Context) ([]Device, error) {
 		Devices []Device `json:"devices"`
 	}
 
-	if err := decode(resp.Body, &res); err != nil {
+	if err := decode(resp.Body, &res, resp.StatusCode); err != nil {
 		return nil, err
 	}
 
@@ -104,7 +105,7 @@ func (c *Client) Points(ctx context.Context, id string) (map[string]Point, error
 	defer resp.Body.Close()
 
 	res := make(map[string]Point, 840)
-	if err := decode(resp.Body, &res); err != nil {
+	if err := decode(resp.Body, &res, resp.StatusCode); err != nil {
 		return nil, err
 	}
 
@@ -124,15 +125,34 @@ func (c *Client) Point(ctx context.Context, id string, point string) (Point, err
 	defer resp.Body.Close()
 
 	var res Point
-	if err := decode(resp.Body, &res); err != nil {
+	if err := decode(resp.Body, &res, resp.StatusCode); err != nil {
 		return res, err
 	}
 
 	return res, nil
 }
 
-func decode(r io.Reader, into any) error {
+func decode(r io.Reader, into any, code int) error {
 	dec := json.NewDecoder(r)
+
+	if code != http.StatusOK {
+		apiErr := APIError{
+			Code: code,
+		}
+
+		if err := dec.Decode(&apiErr); err != nil {
+			apiErr.Message = err.Error()
+			return &apiErr
+		}
+
+		if _, derr := dec.Token(); derr != io.EOF {
+			apiErr.Message = strings.Join([]string{apiErr.Message, "trailing garbage in JSON"}, ", ")
+			return &apiErr
+		}
+
+		apiErr.Code = code
+		return &apiErr
+	}
 
 	err := dec.Decode(into)
 	if err != nil {

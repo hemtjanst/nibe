@@ -2,6 +2,7 @@ package nibe
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -142,3 +143,16 @@ const (
 	ValueTypeInvalid ValueType = ""
 	ValueTypeData    ValueType = "datavalue"
 )
+
+type APIError struct {
+	Code    int    `json:"-"`
+	Message string `json:"error"`
+}
+
+func (a *APIError) String() string {
+	return fmt.Sprintf("code: %d, message: %s", a.Code, a.Message)
+}
+
+func (a *APIError) Error() string {
+	return a.String()
+}
