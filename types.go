@@ -152,6 +152,15 @@ const (
 	ValueTypeData    ValueType = "datavalue"
 )
 
+type Notification struct {
+	ID          int    `json:"alarmId"`
+	Description string `json:"description"`
+	Header      string `json:"header"`
+	Severity    int    `json:"severity"`
+	Time        string `json:"time"`
+	EquipName   string `json:"equipName"`
+}
+
 type APIError struct {
 	Code    int    `json:"-"`
 	Message string `json:"error"`

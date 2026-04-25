@@ -167,7 +167,53 @@ func (c *Client) Point(ctx context.Context, id string, point string) (Point, err
 	return res, nil
 }
 
+func (c *Client) Notifications(ctx context.Context, id string) ([]Notification, error) {
+	u := c.endpoint + "/api/v1/devices/" + id + "/notifications"
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	req.SetBasicAuth(c.user, c.password)
+
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var res struct {
+		Alarms []Notification `json:"alarms"`
+	}
+
+	if err := decode(resp.Body, &res, resp.StatusCode); err != nil {
+		return nil, err
+	}
+
+	return res.Alarms, nil
+}
+
+func (c *Client) ResetNotifications(ctx context.Context, id string) error {
+	u := c.endpoint + "/api/v1/devices/" + id + "/notifications"
+	req, _ := http.NewRequestWithContext(ctx, http.MethodDelete, u, nil)
+	req.SetBasicAuth(c.user, c.password)
+
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if err := decode(resp.Body, nil, resp.StatusCode); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func decode(r io.Reader, into any, code int) error {
+	if code == http.StatusNoContent {
+		return nil
+	}
+
 	dec := json.NewDecoder(r)
 
 	if code != http.StatusOK {

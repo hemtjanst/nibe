@@ -149,6 +149,32 @@ func main() {
 			fmt.Fprintln(errOut, "point needs a device ID and a variable ID, and an optional value to set it to")
 			os.Exit(1)
 		}
+	case "notifications":
+		if len(args) != 2 {
+			fmt.Fprintln(errOut, "notifications needs a device ID")
+			os.Exit(1)
+		}
+
+		notifs, err := client.Notifications(ctx, args[1])
+		if err != nil {
+			fmt.Fprintln(errOut, err)
+			os.Exit(1)
+		}
+
+		if err := output(os.Stdout, notifs, *format); err != nil {
+			fmt.Fprintln(errOut, err)
+			os.Exit(1)
+		}
+	case "notifications-reset":
+		if len(args) != 2 {
+			fmt.Fprintln(errOut, "notifications-reset needs a device ID")
+			os.Exit(1)
+		}
+
+		if err := client.ResetNotifications(ctx, args[1]); err != nil {
+			fmt.Fprintln(errOut, err)
+			os.Exit(1)
+		}
 	}
 }
 
