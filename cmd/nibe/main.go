@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"hemtjan.st/nibe"
 )
@@ -94,19 +95,58 @@ func main() {
 			os.Exit(1)
 		}
 	case "point":
-		if len(args) != 3 {
-			fmt.Fprintln(errOut, "point needs a device ID and a variable ID")
-			os.Exit(1)
-		}
+		switch len(args) {
+		case 3:
+			point, err := client.Point(ctx, args[1], args[2])
+			if err != nil {
+				fmt.Fprintln(errOut, err)
+				os.Exit(1)
+			}
 
-		point, err := client.Point(ctx, args[1], args[2])
-		if err != nil {
-			fmt.Fprintln(errOut, err)
-			os.Exit(1)
-		}
+			if err := output(os.Stdout, point, *format); err != nil {
+				fmt.Fprintln(errOut, err)
+				os.Exit(1)
+			}
+		case 4:
+			point, err := client.Point(ctx, args[1], args[2])
+			if err != nil {
+				fmt.Fprintln(errOut, err)
+				os.Exit(1)
+			}
 
-		if err := output(os.Stdout, point, *format); err != nil {
-			fmt.Fprintln(errOut, err)
+			if !point.Metadata.Writable {
+				fmt.Fprintf(errOut, "variable: %d (%s) is not writable\n", point.Metadata.VariableID, point.Title)
+				os.Exit(1)
+			}
+
+			nv := point.Value
+
+			switch point.Metadata.VariableType {
+			case nibe.VariableTypeInteger:
+				value, err := strconv.ParseInt(args[3], 10, 32)
+				if err != nil {
+					fmt.Fprintf(errOut, "variable: %d (%s) must be %s\n", point.Metadata.VariableID, point.Title, point.Metadata.VariableType)
+					os.Exit(1)
+				}
+
+				nv.Int = int(value)
+			default:
+				fmt.Fprintln(errOut, "cannot change points other than ints")
+				os.Exit(1)
+			}
+
+			patched, err := client.PatchPoints(ctx, args[1], nv)
+			if err != nil {
+				fmt.Fprintln(errOut, err)
+				os.Exit(1)
+			}
+
+			if err := output(os.Stdout, patched, *format); err != nil {
+				fmt.Fprintln(errOut, err)
+				os.Exit(1)
+			}
+		default:
+			fmt.Fprintln(errOut, "point needs a device ID and a variable ID, and an optional value to set it to")
 			os.Exit(1)
 		}
 	}

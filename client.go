@@ -112,6 +112,41 @@ func (c *Client) Points(ctx context.Context, id string) (map[string]Point, error
 	return res, nil
 }
 
+func (c *Client) PatchPoints(ctx context.Context, id string, values ...Value) (map[string]Point, error) {
+	if len(values) == 0 {
+		return nil, fmt.Errorf("need at least one value to update")
+	}
+
+	patchVals := make([]map[string]any, 0, len(values))
+	for _, val := range values {
+		patchVals = append(patchVals, val.patchRequest())
+	}
+
+	body, err := json.Marshal(patchVals)
+	if err != nil {
+		return nil, err
+	}
+
+	u := c.endpoint + "/api/v1/devices/" + id + "/points"
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPatch, u, bytes.NewReader(body))
+	req.SetBasicAuth(c.user, c.password)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	res := make(map[string]Point, len(values))
+	if err := decode(resp.Body, &res, resp.StatusCode); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (c *Client) Point(ctx context.Context, id string, point string) (Point, error) {
 	u := c.endpoint + "/api/v1/devices/" + id + "/points/" + point
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)

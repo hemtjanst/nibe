@@ -68,6 +68,14 @@ type Value struct {
 	Str string `json:"stringValue"`
 }
 
+func (v Value) patchRequest() map[string]any {
+	return map[string]any{
+		"type":         v.Type,
+		"variableId":   v.VariableID,
+		"integerValue": v.Int,
+	}
+}
+
 type Metadata struct {
 	Type MetadataType `json:"type"`
 
